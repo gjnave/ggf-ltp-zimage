@@ -1,0 +1,12 @@
+torchvision
+transformers
+safetensors
+einops
+sentencepiece
+protobuf
+ftfy
+accelerate
+peft
+imageio
+imageio-ffmpeg
+huggingface_hub

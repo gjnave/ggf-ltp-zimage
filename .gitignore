@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.log
+*.tmp
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.gguf
+output/
+temp/

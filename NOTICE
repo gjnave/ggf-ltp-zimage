@@ -1,0 +1,14 @@
+GetGoingFast ComfyUI L2P Z-Image
+
+This project packages a ComfyUI custom node wrapper and workflow for the
+L2P Z-Image 6B pixel-space model.
+
+The vendored `diffsynth` runtime files are adapted from the public Hugging Face
+Space `multimodalart/z-image-6b-pixel-space`, which is published under the
+Apache-2.0 license and uses the L2P model from `zhen-nan/L2P`.
+
+Links:
+- https://getgoingfast.pro
+- https://huggingface.co/zhen-nan/L2P
+- https://huggingface.co/spaces/multimodalart/z-image-6b-pixel-space
+- https://github.com/TencentYoutuResearch/T2I-L2P
