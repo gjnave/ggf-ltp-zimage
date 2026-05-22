@@ -59,7 +59,7 @@ qwen_3_4b.safetensors
 Z-Image-Turbo-tokenizer/tokenizer
 ```
 
-If your file or folder names differ, edit the `L2P Z-Image Pipeline Loader` node.
+If your file or folder names differ, select the correct entries in the `L2P Z-Image Pipeline Loader` node.
 
 ## Workflow
 
@@ -69,13 +69,19 @@ Copy or open:
 workflows/z_image_l2p_no_vae_from_hidream.json
 ```
 
-The tokenizer is loaded automatically from:
+The `tokenizer_name` dropdown is populated by scanning:
 
 ```text
-models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer
+ComfyUI/models/text_encoders
 ```
 
-There is no tokenizer path widget in the workflow. This is intentional: the tokenizer is treated like a required model asset under ComfyUI's `models` folder.
+It shows tokenizer folders as relative names, for example:
+
+```text
+Z-Image-Turbo-tokenizer/tokenizer
+```
+
+It should not show machine-specific absolute drive paths.
 
 ## Smoke Test
 
