@@ -1,4 +1,4 @@
-GetGoingFast ComfyUI L2P Z-Image
+ggf-ltp-zimage
 
 This project packages a ComfyUI custom node wrapper and workflow for the
 L2P Z-Image 6B pixel-space model.

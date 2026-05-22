@@ -1,4 +1,4 @@
-# GetGoingFast ComfyUI L2P Z-Image
+# ggf-ltp-zimage
 
 ComfyUI custom nodes and starter workflows for running **L2P Z-Image 6B pixel-space** generation in ComfyUI.
 
@@ -26,8 +26,8 @@ From your ComfyUI `custom_nodes` directory:
 
 ```powershell
 cd <ComfyUI>\custom_nodes
-git clone https://github.com/gjnave/getgoingfast-comfyui-l2p-zimage.git
-cd getgoingfast-comfyui-l2p-zimage
+git clone https://github.com/gjnave/ggf-ltp-zimage.git
+cd ggf-ltp-zimage
 <ComfyUI>\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
