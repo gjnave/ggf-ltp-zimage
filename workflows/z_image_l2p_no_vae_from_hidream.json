@@ -13,7 +13,7 @@
       ],
       "size": [
         420,
-        150
+        120
       ],
       "flags": {},
       "order": 0,
@@ -34,7 +34,6 @@
       "widgets_values": [
         "Z-image-6b-no-VAE.safetensors",
         "qwen_3_4b.safetensors",
-        "models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer",
         "cuda",
         "bf16"
       ]

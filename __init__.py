@@ -16,23 +16,13 @@ if str(NODE_DIR) not in sys.path:
 _PIPELINE_CACHE = {}
 
 
-DEFAULT_TOKENIZER_PATH = "models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer"
+TOKENIZER_DIR = "Z-Image-Turbo-tokenizer/tokenizer"
 
 
-def _resolve_tokenizer_path(tokenizer_path):
-    path = Path(tokenizer_path).expanduser()
-    candidates = []
-    if path.is_absolute():
-        candidates.append(path)
-    else:
-        candidates.extend(
-            [
-                Path(folder_paths.base_path) / path,
-                Path(folder_paths.models_dir) / path,
-                Path(folder_paths.models_dir) / "text_encoders" / path,
-                NODE_DIR / path,
-            ]
-        )
+def _resolve_tokenizer_path():
+    candidates = [
+        Path(folder_paths.models_dir) / "text_encoders" / TOKENIZER_DIR,
+    ]
 
     for candidate in candidates:
         if (candidate / "tokenizer_config.json").is_file():
@@ -40,8 +30,9 @@ def _resolve_tokenizer_path(tokenizer_path):
 
     checked = "\n".join(str(candidate) for candidate in candidates)
     raise FileNotFoundError(
-        "Could not find tokenizer_config.json for tokenizer_path "
-        f"{tokenizer_path!r}. Checked:\n{checked}"
+        "Could not find the Z-Image tokenizer folder. Place tokenizer files at:\n"
+        f"{Path('models') / 'text_encoders' / TOKENIZER_DIR}\n\n"
+        f"Checked:\n{checked}"
     )
 
 
@@ -52,7 +43,6 @@ class L2PZImagePipelineLoader:
             "required": {
                 "model_name": (folder_paths.get_filename_list("diffusion_models"),),
                 "text_encoder_name": (folder_paths.get_filename_list("text_encoders"),),
-                "tokenizer_path": ("STRING", {"default": DEFAULT_TOKENIZER_PATH}),
                 "device": (["cuda", "cpu"],),
                 "dtype": (["bf16", "fp32"],),
             }
@@ -63,12 +53,12 @@ class L2PZImagePipelineLoader:
     FUNCTION = "load"
     CATEGORY = "L2P/Z-Image"
 
-    def load(self, model_name, text_encoder_name, tokenizer_path, device, dtype):
+    def load(self, model_name, text_encoder_name, device, dtype):
         from diffsynth.pipelines.z_image_L2P import ZImagePipeline, ModelConfig
 
         model_path = folder_paths.get_full_path_or_raise("diffusion_models", model_name)
         text_encoder_path = folder_paths.get_full_path_or_raise("text_encoders", text_encoder_name)
-        resolved_tokenizer_path = _resolve_tokenizer_path(tokenizer_path)
+        resolved_tokenizer_path = _resolve_tokenizer_path()
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float32
         key = (model_path, text_encoder_path, resolved_tokenizer_path, device, str(torch_dtype))
         if key not in _PIPELINE_CACHE:

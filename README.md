@@ -56,7 +56,7 @@ The default workflow expects these exact local names:
 ```text
 Z-image-6b-no-VAE.safetensors
 qwen_3_4b.safetensors
-models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer
+Z-Image-Turbo-tokenizer/tokenizer
 ```
 
 If your file or folder names differ, edit the `L2P Z-Image Pipeline Loader` node.
@@ -69,15 +69,13 @@ Copy or open:
 workflows/z_image_l2p_no_vae_from_hidream.json
 ```
 
-If Comfy marks the tokenizer widget red, select your local tokenizer folder in the `L2P Z-Image Pipeline Loader` node.
-
-The included workflow uses this portable tokenizer path:
+The tokenizer is loaded automatically from:
 
 ```text
 models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer
 ```
 
-That path is resolved relative to the ComfyUI root. Avoid publishing workflows with machine-specific absolute paths.
+There is no tokenizer path widget in the workflow. This is intentional: the tokenizer is treated like a required model asset under ComfyUI's `models` folder.
 
 ## Smoke Test
 
