@@ -1,4 +1,3 @@
-import os
 import random
 import sys
 from pathlib import Path
@@ -17,31 +16,43 @@ if str(NODE_DIR) not in sys.path:
 _PIPELINE_CACHE = {}
 
 
-def _tokenizer_paths():
-    roots = [
-        Path(folder_paths.models_dir) / "text_encoders",
-        NODE_DIR,
-    ]
-    found = []
-    for root in roots:
-        if not root.exists():
-            continue
-        for config in root.rglob("tokenizer_config.json"):
-            found.append(str(config.parent))
-    return sorted(set(found))
+DEFAULT_TOKENIZER_PATH = "models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer"
+
+
+def _resolve_tokenizer_path(tokenizer_path):
+    path = Path(tokenizer_path).expanduser()
+    candidates = []
+    if path.is_absolute():
+        candidates.append(path)
+    else:
+        candidates.extend(
+            [
+                Path(folder_paths.base_path) / path,
+                Path(folder_paths.models_dir) / path,
+                Path(folder_paths.models_dir) / "text_encoders" / path,
+                NODE_DIR / path,
+            ]
+        )
+
+    for candidate in candidates:
+        if (candidate / "tokenizer_config.json").is_file():
+            return str(candidate)
+
+    checked = "\n".join(str(candidate) for candidate in candidates)
+    raise FileNotFoundError(
+        "Could not find tokenizer_config.json for tokenizer_path "
+        f"{tokenizer_path!r}. Checked:\n{checked}"
+    )
 
 
 class L2PZImagePipelineLoader:
     @classmethod
     def INPUT_TYPES(cls):
-        tokenizers = _tokenizer_paths()
-        if not tokenizers:
-            tokenizers = [str(Path(folder_paths.models_dir) / "text_encoders" / "Z-Image-Turbo-tokenizer" / "tokenizer")]
         return {
             "required": {
                 "model_name": (folder_paths.get_filename_list("diffusion_models"),),
                 "text_encoder_name": (folder_paths.get_filename_list("text_encoders"),),
-                "tokenizer_path": (tokenizers,),
+                "tokenizer_path": ("STRING", {"default": DEFAULT_TOKENIZER_PATH}),
                 "device": (["cuda", "cpu"],),
                 "dtype": (["bf16", "fp32"],),
             }
@@ -57,8 +68,9 @@ class L2PZImagePipelineLoader:
 
         model_path = folder_paths.get_full_path_or_raise("diffusion_models", model_name)
         text_encoder_path = folder_paths.get_full_path_or_raise("text_encoders", text_encoder_name)
+        resolved_tokenizer_path = _resolve_tokenizer_path(tokenizer_path)
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float32
-        key = (model_path, text_encoder_path, tokenizer_path, device, str(torch_dtype))
+        key = (model_path, text_encoder_path, resolved_tokenizer_path, device, str(torch_dtype))
         if key not in _PIPELINE_CACHE:
             pipe = ZImagePipeline.from_pretrained(
                 torch_dtype=torch_dtype,
@@ -67,7 +79,7 @@ class L2PZImagePipelineLoader:
                     ModelConfig(path=model_path),
                     ModelConfig(path=text_encoder_path),
                 ],
-                tokenizer_config=ModelConfig(path=tokenizer_path),
+                tokenizer_config=ModelConfig(path=resolved_tokenizer_path),
             )
             # This pipeline supports manual text-encoder offload; keeping it enabled
             # reduces peak VRAM for the 6B pixel-space checkpoint.

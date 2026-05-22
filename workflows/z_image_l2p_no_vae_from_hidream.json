@@ -34,7 +34,7 @@
       "widgets_values": [
         "Z-image-6b-no-VAE.safetensors",
         "qwen_3_4b.safetensors",
-        "D:\\comfyUI\\ComfyUI\\models\\text_encoders\\Z-Image-Turbo-tokenizer\\tokenizer",
+        "models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer",
         "cuda",
         "bf16"
       ]
@@ -73,7 +73,7 @@
         "Node name for S&R": "L2PZImageGenerate"
       },
       "widgets_values": [
-        "A colorful Saturday-morning mystery cartoon scene. The one and only Velma wearing an orange turtleneck sweater, red skirt, knee-high socks, and thick square glasses kneels with a magnifying glass, inspecting dusty glowing footprints across an old mansion floor. Beside her is Scooby Doo and a heroic green ninja turtle wearing a clean white shirt, blue pants, and a bright orange ascot, looking handsome and brave.\n\nThe footprints lead to a mysterious golden door hidden behind old shelves, glowing with warm magical light through the cracks. The door has strange dreamlike symbols carved into it, suggesting it opens into an advanced AI dream world. The rune like letters on the door spell \"GGF\". Dust floats in the flashlight beams. Cobwebs, old portraits, and crooked furniture fill the background. The mood is spooky but funny, adventurous, and family-friendly.\n\nBright clean cartoon colors, crisp linework, playful expressions, 1970s mystery-adventure vibe, cinematic lighting, high detail, no logos, no watermark.",
+        "A bright, playful mystery-adventure cartoon scene inside an old mansion. A curious young detective kneels with a magnifying glass, inspecting softly glowing footprints across a dusty wooden floor. A nervous dog-like companion and a brave masked adventurer hold flashlights nearby. The footprints lead toward a mysterious golden door hidden behind old shelves, glowing with warm magical light through the cracks. Dust floats in the beams. Cobwebs, old portraits, crooked furniture, crisp linework, expressive characters, cinematic lighting, high detail, no logos, no watermark.",
         "bad quality, low quality, blurry, artefacts",
         1024,
         1024,

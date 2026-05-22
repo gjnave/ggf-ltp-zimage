@@ -25,17 +25,17 @@ It wraps the public L2P Z-Image pipeline so ComfyUI can run the **no-VAE pixel-s
 From your ComfyUI `custom_nodes` directory:
 
 ```powershell
-cd D:\comfyUI\ComfyUI\custom_nodes
+cd <ComfyUI>\custom_nodes
 git clone https://github.com/gjnave/getgoingfast-comfyui-l2p-zimage.git
 cd getgoingfast-comfyui-l2p-zimage
-D:\comfyUI\ComfyUI\venv\Scripts\python.exe -m pip install -r requirements.txt
+<ComfyUI>\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Restart ComfyUI after installing.
 
-## Models
+## Required Models
 
-Put these files in your ComfyUI models folder:
+This repo does not include model weights. Put these required files in your ComfyUI models folder:
 
 ```text
 ComfyUI/
@@ -51,19 +51,15 @@ ComfyUI/
           vocab.json
 ```
 
-Useful upstream links:
-
-- L2P weights: <https://huggingface.co/zhen-nan/L2P>
-- Z-Image tokenizer/text encoder source: <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo>
-- Comfy split Z-Image assets: <https://huggingface.co/Comfy-Org/z_image_turbo>
-
-The tested local checkpoint name was:
+The default workflow expects these exact local names:
 
 ```text
 Z-image-6b-no-VAE.safetensors
+qwen_3_4b.safetensors
+models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer
 ```
 
-If your file name differs, select it manually in the loader node.
+If your file or folder names differ, edit the `L2P Z-Image Pipeline Loader` node.
 
 ## Workflow
 
@@ -74,6 +70,14 @@ workflows/z_image_l2p_no_vae_from_hidream.json
 ```
 
 If Comfy marks the tokenizer widget red, select your local tokenizer folder in the `L2P Z-Image Pipeline Loader` node.
+
+The included workflow uses this portable tokenizer path:
+
+```text
+models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer
+```
+
+That path is resolved relative to the ComfyUI root. Avoid publishing workflows with machine-specific absolute paths.
 
 ## Smoke Test
 
@@ -94,9 +98,9 @@ On the original development machine this generated successfully through the Comf
 
 ## Credits
 
-- L2P project: <https://github.com/TencentYoutuResearch/T2I-L2P>
-- L2P weights: <https://huggingface.co/zhen-nan/L2P>
-- Reference HF Space: <https://huggingface.co/spaces/multimodalart/z-image-6b-pixel-space>
+- Tencent Youtu Research L2P project
+- zhen-nan L2P model release
+- multimodalart L2P Z-Image reference Space
 - Packaged for fast ComfyUI use by [GetGoingFast](https://getgoingfast.pro)
 
 ## License
