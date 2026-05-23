@@ -4,6 +4,8 @@ ComfyUI custom nodes and starter workflows for running **L2P Z-Image 6B pixel-sp
 
 Built for people who want to get moving fast: [getgoingfast.pro](https://getgoingfast.pro)
 
+<img src="./assets/nt.png>
+
 ## What This Is
 
 This adds two ComfyUI nodes:
