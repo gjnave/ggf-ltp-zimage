@@ -156,22 +156,8 @@ Z-Image-Turbo-tokenizer/tokenizer
 
 It should not show machine-specific absolute drive paths.
 
-## Smoke Test
-
-After restart, create this tiny test:
-
-- prompt: `a tiny red cube on a plain white background`
-- size: `256 x 256`
-- steps: `1`
-- cfg: `1.0`
 
 On the original development machine this generated successfully through the ComfyUI API.
-
-## Notes
-
-- This is a lightweight Comfy wrapper around the L2P Z-Image runtime, not a native KSampler graph.
-- The model is large. First run can take a while because the 6B model and Qwen text encoder need to load.
-- Some unrelated custom-node import warnings in your Comfy log do not necessarily affect this node.
 
 ## Credits
 
