@@ -81,16 +81,6 @@ cd ggf-ltp-zimage
 $COMFY_ROOT\venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-If your ComfyUI install does not use a `venv`, install `huggingface_hub` in the Python environment that runs ComfyUI and set `$HF = "hf"` instead.
-
-Create the model folders:
-
-```powershell
-New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\diffusion_models" | Out-Null
-New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\text_encoders" | Out-Null
-New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\text_encoders\Z-Image-Turbo-tokenizer\tokenizer" | Out-Null
-```
-
 Download the L2P Z-Image 6B no-VAE model:
 
 - Source page: <https://huggingface.co/zhen-nan/L2P>
