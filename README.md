@@ -18,7 +18,7 @@ It wraps the public L2P Z-Image pipeline so ComfyUI can run the **no-VAE pixel-s
 - `__init__.py` custom node entrypoint
 - `diffsynth/` runtime files adapted from the public L2P Z-Image HF Space
 - `requirements.txt`
-- `workflows/z_image_l2p_no_vae_from_hidream.json`
+- `workflows/ggf_l2p_zimage_6b_no_vae.json`
 
 ## Install
 
@@ -137,7 +137,7 @@ tokenizer_name: Z-Image-Turbo-tokenizer/tokenizer
 Copy or open:
 
 ```text
-workflows/z_image_l2p_no_vae_from_hidream.json
+workflows/ggf_l2p_zimage_6b_no_vae.json
 ```
 
 The `tokenizer_name` dropdown is populated by scanning:
