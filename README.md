@@ -47,6 +47,7 @@ ComfyUI/
       Z-Image-Turbo-tokenizer/
         tokenizer/
           merges.txt
+          tokenizer.json
           tokenizer_config.json
           vocab.json
 ```
@@ -60,6 +61,86 @@ Z-Image-Turbo-tokenizer/tokenizer
 ```
 
 If your file or folder names differ, select the correct entries in the `L2P Z-Image Pipeline Loader` node.
+
+## Download Required Models
+
+Set `COMFY_ROOT` to your ComfyUI folder, then run the commands below in PowerShell.
+Replace the placeholder path with the folder that contains your `main.py`.
+
+```powershell
+$COMFY_ROOT = "<path-to-your-ComfyUI>"
+$HF = "$COMFY_ROOT\venv\Scripts\hf.exe"
+```
+
+Install this custom node first, because its `requirements.txt` installs the Hugging Face `hf` download CLI:
+
+```powershell
+cd $COMFY_ROOT\custom_nodes
+git clone https://github.com/gjnave/ggf-ltp-zimage.git
+cd ggf-ltp-zimage
+$COMFY_ROOT\venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+If your ComfyUI install does not use a `venv`, install `huggingface_hub` in the Python environment that runs ComfyUI and set `$HF = "hf"` instead.
+
+Create the model folders:
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\diffusion_models" | Out-Null
+New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\text_encoders" | Out-Null
+New-Item -ItemType Directory -Force -Path "$COMFY_ROOT\models\text_encoders\Z-Image-Turbo-tokenizer\tokenizer" | Out-Null
+```
+
+Download the L2P Z-Image 6B no-VAE model:
+
+- Source page: <https://huggingface.co/zhen-nan/L2P>
+- Direct file page: <https://huggingface.co/zhen-nan/L2P/blob/main/model-1k-merge.safetensors>
+- Local file expected by the workflow: `models/diffusion_models/Z-image-6b-no-VAE.safetensors`
+
+Manual download: download `model-1k-merge.safetensors`, put it in `ComfyUI/models/diffusion_models`, and rename it to `Z-image-6b-no-VAE.safetensors`.
+
+```powershell
+& $HF download zhen-nan/L2P model-1k-merge.safetensors --local-dir "$COMFY_ROOT\models\diffusion_models"
+Move-Item -Force "$COMFY_ROOT\models\diffusion_models\model-1k-merge.safetensors" "$COMFY_ROOT\models\diffusion_models\Z-image-6b-no-VAE.safetensors"
+```
+
+Download the Qwen 3 4B text encoder:
+
+- Source page: <https://huggingface.co/Comfy-Org/z_image_turbo/tree/main/split_files/text_encoders>
+- Direct file page: <https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/text_encoders/qwen_3_4b.safetensors>
+- Local file expected by the workflow: `models/text_encoders/qwen_3_4b.safetensors`
+
+Manual download: download `qwen_3_4b.safetensors` and put it directly in `ComfyUI/models/text_encoders`.
+
+```powershell
+& $HF download Comfy-Org/z_image_turbo split_files/text_encoders/qwen_3_4b.safetensors --local-dir "$COMFY_ROOT\models\text_encoders"
+Move-Item -Force "$COMFY_ROOT\models\text_encoders\split_files\text_encoders\qwen_3_4b.safetensors" "$COMFY_ROOT\models\text_encoders\qwen_3_4b.safetensors"
+Remove-Item -Recurse -Force "$COMFY_ROOT\models\text_encoders\split_files"
+```
+
+Download the Z-Image tokenizer:
+
+- Source page: <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/tree/main/tokenizer>
+- Direct file pages:
+  - <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/tokenizer/merges.txt>
+  - <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/tokenizer/tokenizer.json>
+  - <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/tokenizer/tokenizer_config.json>
+  - <https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/blob/main/tokenizer/vocab.json>
+- Local folder expected by the workflow: `models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer`
+
+Manual download: download all four tokenizer files and put them in `ComfyUI/models/text_encoders/Z-Image-Turbo-tokenizer/tokenizer`.
+
+```powershell
+& $HF download Tongyi-MAI/Z-Image-Turbo tokenizer/merges.txt tokenizer/tokenizer.json tokenizer/tokenizer_config.json tokenizer/vocab.json --local-dir "$COMFY_ROOT\models\text_encoders\Z-Image-Turbo-tokenizer"
+```
+
+After downloading, restart ComfyUI. The loader dropdowns should show:
+
+```text
+model_name: Z-image-6b-no-VAE.safetensors
+text_encoder_name: qwen_3_4b.safetensors
+tokenizer_name: Z-Image-Turbo-tokenizer/tokenizer
+```
 
 ## Workflow
 
