@@ -1,3 +1,4 @@
+import gc
 import random
 import sys
 from pathlib import Path
@@ -43,6 +44,29 @@ def _resolve_tokenizer_path(tokenizer_name):
     )
 
 
+def _unload_all_pipelines():
+    """캐시된 모든 파이프라인을 VRAM에서 해제합니다."""
+    global _PIPELINE_CACHE
+    for key, pipe in list(_PIPELINE_CACHE.items()):
+        try:
+            if hasattr(pipe, 'dit') and pipe.dit is not None:
+                pipe.dit.to('cpu')
+                del pipe.dit
+                pipe.dit = None
+            if hasattr(pipe, 'text_encoder') and pipe.text_encoder is not None:
+                pipe.text_encoder.to('cpu')
+                del pipe.text_encoder
+                pipe.text_encoder = None
+        except Exception:
+            pass
+        del pipe
+    _PIPELINE_CACHE.clear()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+    gc.collect()
+
+
 class L2PZImagePipelineLoader:
     @classmethod
     def INPUT_TYPES(cls):
@@ -79,10 +103,9 @@ class L2PZImagePipelineLoader:
                 ],
                 tokenizer_config=ModelConfig(path=resolved_tokenizer_path),
             )
-            # This pipeline supports manual text-encoder offload; keeping it enabled
-            # reduces peak VRAM for the 6B pixel-space checkpoint.
             pipe.offload_text_encoder = True
             _PIPELINE_CACHE[key] = pipe
+
         return (_PIPELINE_CACHE[key],)
 
 
@@ -94,12 +117,13 @@ class L2PZImageGenerate:
                 "pipeline": ("L2P_ZIMAGE_PIPELINE",),
                 "prompt": ("STRING", {"multiline": True, "dynamic_prompts": True}),
                 "negative_prompt": ("STRING", {"multiline": True, "dynamic_prompts": True, "default": ""}),
-                "width": ("INT", {"default": 1024, "min": 256, "max": 4096, "step": 16}),
-                "height": ("INT", {"default": 1024, "min": 256, "max": 4096, "step": 16}),
+                "width": ("INT", {"default": 1024, "min": 256, "max": 4096, "step": 128}),
+                "height": ("INT", {"default": 1024, "min": 256, "max": 4096, "step": 128}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100, "step": 1}),
                 "cfg_scale": ("FLOAT", {"default": 2.0, "min": 0.1, "max": 10.0, "step": 0.1}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 2147483647, "control_after_generate": True}),
                 "randomize_seed": ("BOOLEAN", {"default": True}),
+                "unload_after_generate": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -107,11 +131,12 @@ class L2PZImageGenerate:
     FUNCTION = "generate"
     CATEGORY = "L2P/Z-Image"
 
-    def generate(self, pipeline, prompt, negative_prompt, width, height, steps, cfg_scale, seed, randomize_seed):
+    def generate(self, pipeline, prompt, negative_prompt, width, height, steps, cfg_scale, seed, randomize_seed, unload_after_generate):
         if randomize_seed:
             seed = random.randint(0, 2**31 - 1)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+
         image = pipeline(
             prompt=prompt.strip(),
             negative_prompt=negative_prompt or "",
@@ -124,15 +149,45 @@ class L2PZImageGenerate:
         )
         image = image.convert("RGB")
         array = np.asarray(image).astype(np.float32) / 255.0
-        return (torch.from_numpy(array)[None,],)
+        result = (torch.from_numpy(array)[None,],)
+
+        # 이미지 결과물을 먼저 만든 뒤 언로드
+        if unload_after_generate:
+            _unload_all_pipelines()
+            print("[ggf-ltp-zimage] 생성 완료 후 VRAM 해제됨")
+
+        return result
+
+
+class L2PZImageUnload:
+    """
+    이 노드를 실행하면 ggf-ltp 모델을 VRAM에서 즉시 해제합니다.
+    Flux, Z-Image Turbo 등 다른 모델로 전환하기 전에 사용하세요.
+    빈 워크플로우에 단독으로 놓고 실행해도 됩니다.
+    """
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {}}
+
+    RETURN_TYPES = ()
+    OUTPUT_NODE = True
+    FUNCTION = "unload"
+    CATEGORY = "L2P/Z-Image"
+
+    def unload(self):
+        _unload_all_pipelines()
+        print("[ggf-ltp-zimage] 모든 L2P 파이프라인을 VRAM에서 해제했습니다.")
+        return {}
 
 
 NODE_CLASS_MAPPINGS = {
     "L2PZImagePipelineLoader": L2PZImagePipelineLoader,
     "L2PZImageGenerate": L2PZImageGenerate,
+    "L2PZImageUnload": L2PZImageUnload,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "L2PZImagePipelineLoader": "L2P Z-Image Pipeline Loader",
     "L2PZImageGenerate": "L2P Z-Image Generate",
+    "L2PZImageUnload": "L2P Z-Image Unload (Free VRAM)",
 }
