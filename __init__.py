@@ -47,24 +47,26 @@ def _resolve_tokenizer_path(tokenizer_name):
 def _unload_all_pipelines():
     """캐시된 모든 파이프라인을 VRAM에서 해제합니다."""
     global _PIPELINE_CACHE
-    for key, pipe in list(_PIPELINE_CACHE.items()):
+
+    for key in list(_PIPELINE_CACHE.keys()):
+        pipe = _PIPELINE_CACHE.pop(key)
+        # 내부 모델들을 CPU로 이동 (None 설정 없이)
         try:
-            if hasattr(pipe, 'dit') and pipe.dit is not None:
-                pipe.dit.to('cpu')
-                del pipe.dit
-                pipe.dit = None
-            if hasattr(pipe, 'text_encoder') and pipe.text_encoder is not None:
-                pipe.text_encoder.to('cpu')
-                del pipe.text_encoder
-                pipe.text_encoder = None
+            for attr in ['dit', 'text_encoder', 'model']:
+                obj = getattr(pipe, attr, None)
+                if obj is not None and hasattr(obj, 'to'):
+                    obj.to('cpu')
         except Exception:
             pass
+        # 파이프라인 객체 참조 해제
         del pipe
-    _PIPELINE_CACHE.clear()
+
+    # VRAM 정리
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
     gc.collect()
+    print("[ggf-ltp-zimage] VRAM 해제 완료")
 
 
 class L2PZImagePipelineLoader:
@@ -93,7 +95,9 @@ class L2PZImagePipelineLoader:
         resolved_tokenizer_path = _resolve_tokenizer_path(tokenizer_name)
         torch_dtype = torch.bfloat16 if dtype == "bf16" else torch.float32
         key = (model_path, text_encoder_path, resolved_tokenizer_path, device, str(torch_dtype))
+
         if key not in _PIPELINE_CACHE:
+            print("[ggf-ltp-zimage] 모델 로딩 중...")
             pipe = ZImagePipeline.from_pretrained(
                 torch_dtype=torch_dtype,
                 device=device,
@@ -105,6 +109,7 @@ class L2PZImagePipelineLoader:
             )
             pipe.offload_text_encoder = True
             _PIPELINE_CACHE[key] = pipe
+            print("[ggf-ltp-zimage] 모델 로딩 완료")
 
         return (_PIPELINE_CACHE[key],)
 
@@ -151,10 +156,9 @@ class L2PZImageGenerate:
         array = np.asarray(image).astype(np.float32) / 255.0
         result = (torch.from_numpy(array)[None,],)
 
-        # 이미지 결과물을 먼저 만든 뒤 언로드
+        # 이미지 변환 완료 후 언로드 (pipeline 참조가 더 이상 필요 없는 시점)
         if unload_after_generate:
             _unload_all_pipelines()
-            print("[ggf-ltp-zimage] 생성 완료 후 VRAM 해제됨")
 
         return result
 
@@ -176,7 +180,6 @@ class L2PZImageUnload:
 
     def unload(self):
         _unload_all_pipelines()
-        print("[ggf-ltp-zimage] 모든 L2P 파이프라인을 VRAM에서 해제했습니다.")
         return {}
 
 
