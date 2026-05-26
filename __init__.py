@@ -47,26 +47,14 @@ def _resolve_tokenizer_path(tokenizer_name):
 def _unload_all_pipelines():
     """캐시된 모든 파이프라인을 VRAM에서 해제합니다."""
     global _PIPELINE_CACHE
-
-    for key in list(_PIPELINE_CACHE.keys()):
-        pipe = _PIPELINE_CACHE.pop(key)
-        # 내부 모델들을 CPU로 이동 (None 설정 없이)
-        try:
-            for attr in ['dit', 'text_encoder', 'model']:
-                obj = getattr(pipe, attr, None)
-                if obj is not None and hasattr(obj, 'to'):
-                    obj.to('cpu')
-        except Exception:
-            pass
-        # 파이프라인 객체 참조 해제
-        del pipe
-
-    # VRAM 정리
+    # 캐시만 비움 - 모델 내부를 건드리지 않음
+    # Python GC가 참조 카운트가 0이 되면 자동으로 메모리 해제
+    _PIPELINE_CACHE.clear()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
     gc.collect()
-    print("[ggf-ltp-zimage] VRAM 해제 완료")
+    print("[ggf-ltp-zimage] VRAM 해제 완료 - 다음 실행 시 모델이 재로드됩니다")
 
 
 class L2PZImagePipelineLoader:
@@ -156,7 +144,6 @@ class L2PZImageGenerate:
         array = np.asarray(image).astype(np.float32) / 255.0
         result = (torch.from_numpy(array)[None,],)
 
-        # 이미지 변환 완료 후 언로드 (pipeline 참조가 더 이상 필요 없는 시점)
         if unload_after_generate:
             _unload_all_pipelines()
 
@@ -168,6 +155,7 @@ class L2PZImageUnload:
     이 노드를 실행하면 ggf-ltp 모델을 VRAM에서 즉시 해제합니다.
     Flux, Z-Image Turbo 등 다른 모델로 전환하기 전에 사용하세요.
     빈 워크플로우에 단독으로 놓고 실행해도 됩니다.
+    다음 실행 시 모델이 자동으로 재로드됩니다.
     """
     @classmethod
     def INPUT_TYPES(cls):
